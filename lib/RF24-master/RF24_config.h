@@ -10,8 +10,6 @@
 #ifndef __RF24_CONFIG_H__
 #define __RF24_CONFIG_H__
 
-
-
 #if ARDUINO < 100
 #include <WProgram.h>
 #else
@@ -59,7 +57,7 @@ typedef uint16_t prog_uint16_t;
 #define printf_P printf
 #define strlen_P strlen
 #define PROGMEM
-#define pgm_read_word(p) (*(p))
+#define pgm_read_word(p) (*(p)) 
 #define PRIPSTR "%s"
 #endif
 
