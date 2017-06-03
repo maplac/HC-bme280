@@ -1,30 +1,38 @@
 /*
- Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
+Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
 
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
- */
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+version 2 as published by the Free Software Foundation.
+*/
 
 /**
- * Example RF Radio Ping Pair
- *
- * This is an example of how to use the RF24 class.  Write this sketch to two different nodes,
- * connect the role_pin to ground on one.  The ping node sends the current time to the pong node,
- * which responds by sending the value back.  The ping node can then see how long the whole cycle
- * took.
- */
+* Example RF Radio Ping Pair
+*
+* This is an example of how to use the RF24 class.  Write this sketch to two different nodes,
+* connect the role_pin to ground on one.  The ping node sends the current time to the pong node,
+* which responds by sending the value back.  The ping node can then see how long the whole cycle
+* took.
+*/
 
 #include <Arduino.h>
 
 #include <SPI.h>
-#include "nRF24L01.h"
-#include "RF24.h"
+#include <Wire.h>
+#include <nRF24L01.h>
+#include <RF24.h>
 #include "printf.h"
 
-#include "SparkFunBME280.h"
-#include "Wire.h"
+#include <SparkFunBME280.h>
 #include <stdint.h>
+
+#define I2C_ADDRESS 0x3C
+#include <SSD1306Ascii.h>
+#include <SSD1306AsciiWire.h>
+SSD1306AsciiWire oled;
+
+int analogPin = 3;
+
 
 // Set up nRF24L01 radio on SPI bus plus pins 9 & 10
 RF24 radio(9,10);
@@ -39,6 +47,7 @@ typedef enum { role_ping_out = 1, role_pong_back } role_e;
 const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
 // The role of the current running sketch
 role_e role;
+
 uint8_t counter;
 
 //Global sensor object
@@ -54,11 +63,12 @@ void setup(void)
 
   // read the address pin, establish our role
   if ( ! digitalRead(role_pin) )
-    role = role_ping_out;
+  role = role_ping_out;
   else
-    role = role_pong_back;
+  role = role_pong_back;
 
   Serial.begin(57600);
+
   printf_begin();
   printf("\n\rRF24/examples/pingpair/\n\r");
   printf("ROLE: %s\n\r",role_friendly_name[role]);
@@ -92,91 +102,117 @@ void setup(void)
   radio.printDetails();
 
   //***Driver settings********************************//
-	//commInterface can be I2C_MODE or SPI_MODE
-	//specify chipSelectPin using arduino pin names
-	//specify I2C address.  Can be 0x77(default) or 0x76
+  //commInterface can be I2C_MODE or SPI_MODE
+  //specify chipSelectPin using arduino pin names
+  //specify I2C address.  Can be 0x77(default) or 0x76
 
-	//For I2C, enable the following and disable the SPI section
-	mySensor.settings.commInterface = I2C_MODE;
-	mySensor.settings.I2CAddress = 0x77;
+  //For I2C, enable the following and disable the SPI section
+  mySensor.settings.commInterface = I2C_MODE;
+  mySensor.settings.I2CAddress = 0x77;
 
-	//For SPI enable the following and dissable the I2C section
-	//mySensor.settings.commInterface = SPI_MODE;
-	//mySensor.settings.chipSelectPin = 10;
-	//***Operation settings*****************************//
-	//renMode can be:
-	//  0, Sleep mode
-	//  1 or 2, Forced mode
-	//  3, Normal mode
-	mySensor.settings.runMode = 3; //Normal mode
+  //For SPI enable the following and dissable the I2C section
+  //mySensor.settings.commInterface = SPI_MODE;
+  //mySensor.settings.chipSelectPin = 10;
+  //***Operation settings*****************************//
+  //renMode can be:
+  //  0, Sleep mode
+  //  1 or 2, Forced mode
+  //  3, Normal mode
+  mySensor.settings.runMode = 3; //Normal mode
 
-	//tStandby can be:
-	//  0, 0.5ms
-	//  1, 62.5ms
-	//  2, 125ms
-	//  3, 250ms
-	//  4, 500ms
-	//  5, 1000ms
-	//  6, 10ms
-	//  7, 20ms
-	mySensor.settings.tStandby = 0;
+  //tStandby can be:
+  //  0, 0.5ms
+  //  1, 62.5ms
+  //  2, 125ms
+  //  3, 250ms
+  //  4, 500ms
+  //  5, 1000ms
+  //  6, 10ms
+  //  7, 20ms
+  mySensor.settings.tStandby = 0;
 
-	//filter can be off or number of FIR coefficients to use:
-	//  0, filter off
-	//  1, coefficients = 2
-	//  2, coefficients = 4
-	//  3, coefficients = 8
-	//  4, coefficients = 16
-	mySensor.settings.filter = 0;
+  //filter can be off or number of FIR coefficients to use:
+  //  0, filter off
+  //  1, coefficients = 2
+  //  2, coefficients = 4
+  //  3, coefficients = 8
+  //  4, coefficients = 16
+  mySensor.settings.filter = 0;
 
-	//tempOverSample can be:
-	//  0, skipped
-	//  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
-	mySensor.settings.tempOverSample = 1;
+  //tempOverSample can be:
+  //  0, skipped
+  //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
+  mySensor.settings.tempOverSample = 1;
 
-	//pressOverSample can be:
-	//  0, skipped
-	//  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
-    mySensor.settings.pressOverSample = 1;
+  //pressOverSample can be:
+  //  0, skipped
+  //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
+  mySensor.settings.pressOverSample = 1;
 
-	//humidOverSample can be:
-	//  0, skipped
-	//  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
-	mySensor.settings.humidOverSample = 1;
+  //humidOverSample can be:
+  //  0, skipped
+  //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
+  mySensor.settings.humidOverSample = 1;
 
   //Calling .begin() causes the settings to be loaded
   Serial.print("Starting BME280... result of .begin(): 0x");
-	delay(10);  //Make sure sensor had enough time to turn on. BME280 requires 2ms to start up.
-	Serial.println(mySensor.begin(), HEX);
+  delay(10);  //Make sure sensor had enough time to turn on. BME280 requires 2ms to start up.
+  Serial.println(mySensor.begin(), HEX);
+
+
+  //Wire.begin();
+  oled.begin(&Adafruit128x64, I2C_ADDRESS);
+  oled.setFont(System5x7);
+  oled.set2X();
+
+  //analogReference(INTERNAL);
 }
 
 void loop(void)
 {
 
-  if (role == role_ping_out){
+  if (role == role_ping_out)
+  {
 
     //Each loop, take a reading.
-  	//Start with temperature, as that data is needed for accurate compensation.
-  	//Reading the temperature updates the compensators of the other functions
-  	//in the background.
+    //Start with temperature, as that data is ne/eded for accurate compensation.
+    //Reading the temperature updates the compensators of the other functions
+    //in the background.
+
+    int val = analogRead(analogPin);
+    //float voltage = val * 5 / 1024.0;//0.0537;//0.0118;
+    float voltage = (val+21) * 5.0 * 10.8 / 1024;
+    float voltage2 = (val+21) * 5.0 / 1024;
 
     float temperature = mySensor.readTempC();
     float pressure = mySensor.readFloatPressure();
     float humidity = mySensor.readFloatHumidity();
     Serial.print("Temperature: ");
-  	Serial.print(temperature, 2);
-  	Serial.println(" degrees C");
-  	Serial.print("Pressure: ");
-  	Serial.print(pressure, 2);
-  	Serial.println(" Pa");
+    Serial.print(temperature, 2);
+    Serial.println(" degrees C");
+    Serial.print("Pressure: ");
+    Serial.print(pressure, 2);
+    Serial.println(" Pa");
     /*
-  	Serial.print("Altitude: ");
-  	Serial.print(mySensor.readFloatAltitudeMeters(), 2);
-  	Serial.println("m");
+    Serial.print("Altitude: ");
+    Serial.print(mySensor.readFloatAltitudeMeters(), 2);
+    Serial.println("m");
     */
-  	Serial.print("%RH: ");
-  	Serial.print(humidity, 2);
-  	Serial.println(" %");
+    Serial.print("%RH: ");
+    Serial.print(humidity, 2);
+    Serial.println(" %");
+
+
+    oled.home();
+    //display.setTextSize(1);
+    //display.print("T[");display.print((char)247);display.println("C],RH[%],P[Pa]");
+    oled.print(temperature);oled.print(" ");oled.print((char)247);oled.println("C");
+    oled.print(humidity);oled.println(" %");
+    oled.print(round(pressure));oled.println(" Pa");
+    oled.print(voltage);oled.print(" ");
+    oled.print(voltage2);
+
+
 
     radio.stopListening();
 
@@ -195,7 +231,7 @@ void loop(void)
     bool ok = radio.write( &packet, 32 );
     counter++;
     if (!ok)
-      printf("write failed, ");
+    printf("write failed, ");
 
     radio.startListening();
 
@@ -203,8 +239,8 @@ void loop(void)
     unsigned long started_waiting_at = millis();
     bool timeout = false;
     while ( ! radio.available() && ! timeout )
-      if (millis() - started_waiting_at > 200 )
-        timeout = true;
+    if (millis() - started_waiting_at > 200 )
+    timeout = true;
 
     // Describe the results
     if ( timeout ){
@@ -232,18 +268,18 @@ void loop(void)
         //printf("data[1:end]=%s", &data[1]);
       }
     }
+
     Serial.println("\n=========================================");
     delay(2000);
   }
 
-
+/*
   if ( role == role_pong_back )
   {
     // if there is data ready
     if ( radio.available() )
     {
       // Dump the payloads until we've gotten everything
-      unsigned long got_time;
       bool done = false;
       char data[32];
       while (!done)
@@ -276,49 +312,5 @@ void loop(void)
       radio.startListening();
     }
   }
+  */
 }
-
-/*
-if (role == role_ping_out)
-{
-  // First, stop listening so we can talk.
-  radio.stopListening();
-
-  // Take the time, and send it.  This will block until complete
-  unsigned long time = millis();
-  printf("Now sending %lu...",time);
-  bool ok = radio.write( &time, sizeof(unsigned long) );
-
-  if (ok)
-    printf("ok...");
-  else
-    printf("failed.\n\r");
-
-  // Now, continue listening
-  radio.startListening();
-
-  // Wait here until we get a response, or timeout (250ms)
-  unsigned long started_waiting_at = millis();
-  bool timeout = false;
-  while ( ! radio.available() && ! timeout )
-    if (millis() - started_waiting_at > 200 )
-      timeout = true;
-
-  // Describe the results
-  if ( timeout )
-  {
-    printf("Failed, response timed out.\n\r");
-  }
-  else
-  {
-    // Grab the response, compare, and send to debugging spew
-    unsigned long got_time;
-    radio.read( &got_time, sizeof(unsigned long) );
-
-    // Spew it
-    printf("Got response %lu, round-trip delay: %lu\n\r",got_time,millis()-got_time);
-  }
-
-  delay(2000);
-}
-*/
