@@ -33,6 +33,13 @@ SSD1306AsciiWire oled;
 
 int analogPin = 3;
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 8
+
+OneWire oneWire(ONE_WIRE_BUS);
+
+DallasTemperature DS18(&oneWire);
 
 // Set up nRF24L01 radio on SPI bus plus pins 9 & 10
 RF24 radio(9,10);
@@ -107,18 +114,18 @@ void setup(void)
   //specify I2C address.  Can be 0x77(default) or 0x76
 
   //For I2C, enable the following and disable the SPI section
-  mySensor.settings.commInterface = I2C_MODE;
-  mySensor.settings.I2CAddress = 0x77;
+  //mySensor.settings.commInterface = I2C_MODE;
+  //mySensor.settings.I2CAddress = 0x77;
 
   //For SPI enable the following and dissable the I2C section
-  //mySensor.settings.commInterface = SPI_MODE;
-  //mySensor.settings.chipSelectPin = 10;
+  mySensor.settings.commInterface = SPI_MODE;
+  mySensor.settings.chipSelectPin = 6;
   //***Operation settings*****************************//
   //renMode can be:
   //  0, Sleep mode
   //  1 or 2, Forced mode
   //  3, Normal mode
-  mySensor.settings.runMode = 3; //Normal mode
+  mySensor.settings.runMode = 1; //Normal mode
 
   //tStandby can be:
   //  0, 0.5ms
@@ -160,12 +167,16 @@ void setup(void)
   Serial.println(mySensor.begin(), HEX);
 
 
-  //Wire.begin();
+  Wire.begin();
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
   oled.setFont(System5x7);
   oled.set2X();
+  oled.clear();
+  
 
   //analogReference(INTERNAL);
+
+  DS18.begin();
 }
 
 void loop(void)
@@ -184,6 +195,21 @@ void loop(void)
     float voltage = (val+21) * 5.0 * 10.8 / 1024;
     float voltage2 = (val+21) * 5.0 / 1024;
 
+    Serial.print(" Requesting temperatures...");
+    DS18.requestTemperatures(); // Send the command to get temperature readings
+    Serial.println("DONE");
+    /********************************************************************/
+    Serial.print("Temperature is: ");
+    float ds18Temp = DS18.getTempCByIndex(0);
+    Serial.println(ds18Temp);//Serial.print("\n");
+
+    uint8_t dataToWrite = (mySensor.settings.tempOverSample << 0x5) & 0xE0;
+  	//Next, pressure oversampling
+  	dataToWrite |= (mySensor.settings.pressOverSample << 0x02) & 0x1C;
+  	//Last, set mode
+  	dataToWrite |= (mySensor.settings.runMode) & 0x03;
+    mySensor.writeRegister(BME280_CTRL_MEAS_REG, dataToWrite);
+    delay(10); // 1.25+2.3+2.3+0.575+2.3+0.575 = 9.3
     float temperature = mySensor.readTempC();
     float pressure = mySensor.readFloatPressure();
     float humidity = mySensor.readFloatHumidity();
@@ -209,8 +235,9 @@ void loop(void)
     oled.print(temperature);oled.print(" ");oled.print((char)247);oled.println("C");
     oled.print(humidity);oled.println(" %");
     oled.print(round(pressure));oled.println(" Pa");
-    oled.print(voltage);oled.print(" ");
-    oled.print(voltage2);
+    oled.print(ds18Temp);oled.print(" ");oled.print((char)247);oled.println("C");
+    //oled.print(voltage);oled.print(" ");
+    //oled.print(voltage2);
 
 
 
@@ -270,7 +297,7 @@ void loop(void)
     }
 
     Serial.println("\n=========================================");
-    delay(2000);
+    delay(1000);
   }
 
 /*
