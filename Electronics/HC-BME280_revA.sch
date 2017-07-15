@@ -1600,8 +1600,8 @@ package type P</description>
 <wire x1="28.575" y1="8.255" x2="-28.575" y2="8.255" width="0.1524" layer="21"/>
 <wire x1="-28.575" y1="8.255" x2="-28.575" y2="-8.255" width="0.1524" layer="21"/>
 <hole x="0" y="0" drill="3.2"/>
-<pad name="P" x="-29.845" y="-1.27" drill="0.6"/>
-<pad name="N" x="-29.845" y="1.27" drill="0.6"/>
+<pad name="P" x="-29.845" y="1.27" drill="0.6"/>
+<pad name="N" x="-29.845" y="-1.27" drill="0.6"/>
 <text x="-19.685" y="4.445" size="1.27" layer="25">&gt;NAME</text>
 <text x="-3.175" y="4.445" size="1.27" layer="27">&gt;VALUE</text>
 <text x="-27.305" y="-0.635" size="1.27" layer="21">P</text>
