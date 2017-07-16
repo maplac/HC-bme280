@@ -1,21 +1,8 @@
-/*
-Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-version 2 as published by the Free Software Foundation.
-*/
-
-/**
-* Example RF Radio Ping Pair
-*
-* This is an example of how to use the RF24 class.  Write this sketch to two different nodes,
-* connect the role_pin to ground on one.  The ping node sends the current time to the pong node,
-* which responds by sending the value back.  The ping node can then see how long the whole cycle
-* took.
-*/
 
 #include <Arduino.h>
+
+#include <Ports.h>
 
 #include <SPI.h>
 #include <Wire.h>
@@ -31,54 +18,67 @@ version 2 as published by the Free Software Foundation.
 #include <SSD1306AsciiWire.h>
 SSD1306AsciiWire oled;
 
-int analogPin = 3;
+int analogPin = 0;
+int buttonPin = 2;
+int oledNotEnabledPin = 10;
+int ledPin = 9;
 
+/*
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #define ONE_WIRE_BUS 8
-
 OneWire oneWire(ONE_WIRE_BUS);
-
 DallasTemperature DS18(&oneWire);
+*/
 
-// Set up nRF24L01 radio on SPI bus plus pins 9 & 10
-RF24 radio(9,10);
-// sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
-// Leave open to be the 'ping' transmitter
-const int role_pin = 7;
+// Set up nRF24L01 radio on SPI bus plus pins 9 & 10 (CE, CS)
+RF24 radio(15, 16);
+
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
-// The various roles supported by this sketch
-typedef enum { role_ping_out = 1, role_pong_back } role_e;
-// The debug-friendly names of those roles
-const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
-// The role of the current running sketch
-role_e role;
 
 uint8_t counter;
 
 //Global sensor object
 BME280 mySensor;
 
-void setup(void)
-{
+volatile bool isTimeout = false;
+volatile bool isButton = false;
+volatile bool isButtonUp = false;
+volatile bool isButtonDown = false;
+ISR(WDT_vect) {
+  Sleepy::watchdogEvent();
+  isTimeout = true;
+}
+// ISR(PCINT2_vect) {
+//   isButton = true;
+// }
+void buttonInt(void){
+   isButton = true;
+}
 
-  // set up the role pin
-  pinMode(role_pin, INPUT);
-  digitalWrite(role_pin,HIGH);
+void setup(void){
+
+  pinMode(buttonPin,INPUT);
+  /*
+  PCICR |= (1<<PCIE2);
+  PCMSK2 |= (1<<PCINT22);
+  MCUCR = (1<<ISC01) | (1<<ISC01);
+  bitSet(PCMSK2, buttonPin); //handler for interrupt
+  bitSet(PCICR, PCIE2); //handler for interrupt
+  */
+  attachInterrupt(digitalPinToInterrupt(buttonPin), buttonInt, CHANGE );
+
+  pinMode(oledNotEnabledPin, OUTPUT);
+  digitalWrite(oledNotEnabledPin, LOW);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
   delay(20); // Just to get a solid reading on the role pin
 
-  // read the address pin, establish our role
-  if ( ! digitalRead(role_pin) )
-  role = role_ping_out;
-  else
-  role = role_pong_back;
 
   Serial.begin(57600);
 
   printf_begin();
-  printf("\n\rRF24/examples/pingpair/\n\r");
-  printf("ROLE: %s\n\r",role_friendly_name[role]);
 
   radio.begin();
 
@@ -94,16 +94,13 @@ void setup(void)
   // Open 'our' pipe for writing
   // Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
 
-  if ( role == role_ping_out )
-  {
+
     radio.openWritingPipe(pipes[0]);
     radio.openReadingPipe(1,pipes[1]);
-  }
-  else
-  {
-    radio.openWritingPipe(pipes[1]);
-    radio.openReadingPipe(1,pipes[0]);
-  }
+
+    //radio.openWritingPipe(pipes[1]);
+  // radio.openReadingPipe(1,pipes[0]);
+
 
   radio.startListening();
   radio.printDetails();
@@ -119,7 +116,7 @@ void setup(void)
 
   //For SPI enable the following and dissable the I2C section
   mySensor.settings.commInterface = SPI_MODE;
-  mySensor.settings.chipSelectPin = 6;
+  mySensor.settings.chipSelectPin = 17;
   //***Operation settings*****************************//
   //renMode can be:
   //  0, Sleep mode
@@ -172,36 +169,36 @@ void setup(void)
   oled.setFont(System5x7);
   oled.set2X();
   oled.clear();
-  
+
 
   //analogReference(INTERNAL);
 
-  DS18.begin();
+  //DS18.begin();
 }
 
-void loop(void)
-{
+void loop(void){
 
-  if (role == role_ping_out)
-  {
+    isTimeout = false;
+    isButton = false;
 
-    //Each loop, take a reading.
-    //Start with temperature, as that data is ne/eded for accurate compensation.
-    //Reading the temperature updates the compensators of the other functions
-    //in the background.
+    // Sleepy::powerDown();
+    Sleepy::loseSomeTime(5000);
+    digitalWrite(ledPin, HIGH);
+
 
     int val = analogRead(analogPin);
     //float voltage = val * 5 / 1024.0;//0.0537;//0.0118;
     float voltage = (val+21) * 5.0 * 10.8 / 1024;
     float voltage2 = (val+21) * 5.0 / 1024;
-
+    float ds18Temp = 123.456;
+    /*
     Serial.print(" Requesting temperatures...");
     DS18.requestTemperatures(); // Send the command to get temperature readings
     Serial.println("DONE");
-    /********************************************************************/
     Serial.print("Temperature is: ");
-    float ds18Temp = DS18.getTempCByIndex(0);
+    ds18Temp = DS18.getTempCByIndex(0);
     Serial.println(ds18Temp);//Serial.print("\n");
+    */
 
     uint8_t dataToWrite = (mySensor.settings.tempOverSample << 0x5) & 0xE0;
   	//Next, pressure oversampling
@@ -235,11 +232,31 @@ void loop(void)
     oled.print(temperature);oled.print(" ");oled.print((char)247);oled.println("C");
     oled.print(humidity);oled.println(" %");
     oled.print(round(pressure));oled.println(" Pa");
-    oled.print(ds18Temp);oled.print(" ");oled.print((char)247);oled.println("C");
+    // oled.print(ds18Temp);oled.print(" ");oled.print((char)247);oled.println("C");
+    oled.print(counter);oled.print(" ");
+    if (isTimeout){
+      oled.print("T");
+    }else{
+      oled.print("t");
+    }
+
+    if (isButton){
+      oled.print("B");
+    }else{
+      oled.print("b");
+    }
+    oled.print(" ");
+    if (digitalRead(buttonPin)){
+      oled.print("U");
+    }else{
+      oled.print("D");
+    }
+
+    oled.print("    ");
+
+
     //oled.print(voltage);oled.print(" ");
     //oled.print(voltage2);
-
-
 
     radio.stopListening();
 
@@ -296,48 +313,9 @@ void loop(void)
       }
     }
 
+    digitalWrite(ledPin, LOW);
     Serial.println("\n=========================================");
-    delay(1000);
-  }
+    delay(20);
+    // delay(1000);
 
-/*
-  if ( role == role_pong_back )
-  {
-    // if there is data ready
-    if ( radio.available() )
-    {
-      // Dump the payloads until we've gotten everything
-      bool done = false;
-      char data[32];
-      while (!done)
-      {
-        // Fetch the payload, and see if this was the last one.
-        //done = radio.read( &got_time, sizeof(unsigned long) );
-        done = radio.read( &data, 32 );
-        uint8_t size = radio.getPayloadSize();
-        printf("size=%d\n", size);
-
-        // Spew it
-        //printf("Got payload %lu...",got_time);
-        data[32]=0;
-        printf("data: %s\n", &data);
-
-        // Delay just a little bit to let the other unit
-        // make the transition to receiver
-        delay(20);
-
-      }
-
-      // First, stop listening so we can talk
-      radio.stopListening();
-
-      // Send the final one back.
-      radio.write( &data, 32 );
-      //printf("Sent response.\n\r");
-
-      // Now, resume listening so we catch the next packets.
-      radio.startListening();
-    }
-  }
-  */
 }
