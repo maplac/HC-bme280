@@ -1386,7 +1386,7 @@ package type P</description>
 <rectangle x1="-0.1999" y1="-0.5001" x2="0.1999" y2="0.5001" layer="35"/>
 </package>
 <package name="NRF24L01">
-<pad name="1" x="-1.27" y="5.08" drill="0.8"/>
+<pad name="1" x="-1.27" y="5.08" drill="0.8" shape="square"/>
 <pad name="2" x="-1.27" y="2.54" drill="0.8"/>
 <pad name="3" x="-1.27" y="0" drill="0.8"/>
 <pad name="4" x="-1.27" y="-2.54" drill="0.8"/>
@@ -1410,7 +1410,7 @@ package type P</description>
 <wire x1="2.54" y1="-3.81" x2="-2.54" y2="-3.81" width="0.1524" layer="21"/>
 </package>
 <package name="BME280">
-<pad name="1" x="-5.08" y="7.62" drill="0.8"/>
+<pad name="1" x="-5.08" y="7.62" drill="0.8" shape="square"/>
 <pad name="2" x="-5.08" y="5.08" drill="0.8"/>
 <pad name="3" x="-5.08" y="2.54" drill="0.8"/>
 <pad name="4" x="-5.08" y="0" drill="0.8"/>
@@ -1428,7 +1428,6 @@ package type P</description>
 <wire x1="6.35" y1="8.89" x2="6.35" y2="-6.35" width="0.127" layer="21"/>
 <wire x1="6.35" y1="-6.35" x2="6.35" y2="-10.16" width="0.127" layer="21"/>
 <wire x1="-6.35" y1="-10.16" x2="6.35" y2="-10.16" width="0.127" layer="21"/>
-<hole x="0" y="-7.62" drill="3.4"/>
 <text x="-1.27" y="-2.54" size="1.27" layer="25" rot="R90">&gt;NAME</text>
 <text x="2.54" y="-2.54" size="1.27" layer="27" rot="R90">&gt;VALUE</text>
 <wire x1="-6.35" y1="8.89" x2="-3.81" y2="8.89" width="0.127" layer="21"/>
@@ -1439,7 +1438,7 @@ package type P</description>
 <wire x1="3.81" y1="-6.35" x2="6.35" y2="-6.35" width="0.127" layer="21"/>
 </package>
 <package name="OLED128X64">
-<pad name="1" x="-3.81" y="0" drill="0.8"/>
+<pad name="1" x="-3.81" y="0" drill="0.8" shape="square"/>
 <pad name="2" x="-1.27" y="0" drill="0.8"/>
 <pad name="3" x="1.27" y="0" drill="0.8"/>
 <pad name="4" x="3.81" y="0" drill="0.8"/>
@@ -1453,8 +1452,6 @@ package type P</description>
 <hole x="11.43" y="0" drill="2.2"/>
 <circle x="-11.43" y="0" radius="2.286" width="0.127" layer="21"/>
 <circle x="11.43" y="0" radius="2.286" width="0.127" layer="21"/>
-<hole x="-11.43" y="-23.495" drill="2.2"/>
-<hole x="11.43" y="-23.495" drill="2.2"/>
 <circle x="-11.43" y="-23.495" radius="2.286" width="0.127" layer="21"/>
 <circle x="11.43" y="-23.495" radius="2.286" width="0.127" layer="21"/>
 <wire x1="5.08" y1="1.27" x2="5.08" y2="-1.27" width="0.1524" layer="21"/>
@@ -1600,16 +1597,18 @@ package type P</description>
 <wire x1="28.575" y1="8.255" x2="-28.575" y2="8.255" width="0.1524" layer="21"/>
 <wire x1="-28.575" y1="8.255" x2="-28.575" y2="-8.255" width="0.1524" layer="21"/>
 <hole x="0" y="0" drill="3.2"/>
-<pad name="P" x="-29.845" y="1.27" drill="0.6"/>
-<pad name="N" x="-29.845" y="-1.27" drill="0.6"/>
+<pad name="P" x="-29.845" y="-1.27" drill="0.6"/>
+<pad name="N" x="-29.845" y="1.27" drill="0.6"/>
 <text x="-19.685" y="4.445" size="1.27" layer="25">&gt;NAME</text>
 <text x="-3.175" y="4.445" size="1.27" layer="27">&gt;VALUE</text>
-<text x="-27.305" y="-0.635" size="1.27" layer="21">P</text>
-<text x="26.035" y="-0.635" size="1.27" layer="21">N</text>
+<text x="-27.94" y="-1.905" size="1.27" layer="21">P</text>
+<text x="6.985" y="-0.635" size="1.27" layer="21">N</text>
 <circle x="0" y="0" radius="3.048" width="0.127" layer="21"/>
+<text x="-27.94" y="0.635" size="1.27" layer="21">N</text>
+<text x="-8.255" y="-0.635" size="1.27" layer="21">P</text>
 </package>
 <package name="BCO35">
-<pad name="IN" x="-2.54" y="0" drill="0.8"/>
+<pad name="IN" x="-2.54" y="0" drill="0.8" shape="square"/>
 <pad name="GND" x="0" y="0" drill="0.8"/>
 <pad name="OUT" x="2.54" y="0" drill="0.8"/>
 <wire x1="-3.81" y1="-1.27" x2="3.81" y2="-1.27" width="0.127" layer="21"/>
@@ -1753,7 +1752,7 @@ package type P</description>
 <wire x1="-3.175" y1="1.27" x2="-3.81" y2="0.635" width="0.1524" layer="21"/>
 <wire x1="-3.81" y1="-0.635" x2="-3.175" y2="-1.27" width="0.1524" layer="21"/>
 <wire x1="-1.905" y1="-1.27" x2="-3.175" y2="-1.27" width="0.1524" layer="21"/>
-<pad name="1" x="-2.54" y="0" drill="1" diameter="1.6764" rot="R90"/>
+<pad name="1" x="-2.54" y="0" drill="1" diameter="1.6764" shape="square" rot="R90"/>
 <pad name="2" x="0" y="0" drill="1" diameter="1.6764" rot="R90"/>
 <pad name="3" x="2.54" y="0" drill="1" diameter="1.6764" rot="R90"/>
 <text x="-3.8862" y="1.8288" size="1.27" layer="25" ratio="10">&gt;NAME</text>
@@ -1891,10 +1890,10 @@ package type P</description>
 <package name="PINHD-4X1-90">
 <wire x1="-3.81" y1="7.62" x2="-3.81" y2="1.27" width="0.762" layer="21"/>
 <wire x1="-1.27" y1="7.62" x2="-1.27" y2="1.27" width="0.762" layer="21"/>
-<pad name="1" x="-3.81" y="0" drill="1" diameter="1.8542" shape="square" rot="R90"/>
+<pad name="1" x="3.81" y="0" drill="1" diameter="1.8542" shape="square" rot="R90"/>
 <text x="6.985" y="-1.27" size="1.27" layer="25" ratio="10" rot="R90">&gt;NAME</text>
 <text x="-5.715" y="-1.27" size="1.27" layer="27" rot="R90">&gt;VALUE</text>
-<pad name="2" x="-1.27" y="0" drill="1" diameter="1.8542" rot="R180"/>
+<pad name="2" x="1.27" y="0" drill="1" diameter="1.8542" rot="R180"/>
 <wire x1="-5.08" y1="1.27" x2="-3.81" y2="1.27" width="0.127" layer="21"/>
 <wire x1="-3.81" y1="1.27" x2="-1.27" y2="1.27" width="0.127" layer="21"/>
 <wire x1="-1.27" y1="1.27" x2="1.27" y2="1.27" width="0.127" layer="21"/>
@@ -1903,8 +1902,8 @@ package type P</description>
 <wire x1="5.08" y1="1.27" x2="5.08" y2="-1.27" width="0.127" layer="21"/>
 <wire x1="5.08" y1="-1.27" x2="-5.08" y2="-1.27" width="0.127" layer="21"/>
 <wire x1="-5.08" y1="-1.27" x2="-5.08" y2="1.27" width="0.127" layer="21"/>
-<pad name="3" x="1.27" y="0" drill="1" diameter="1.8542" rot="R180"/>
-<pad name="4" x="3.81" y="0" drill="1" diameter="1.8542" rot="R180"/>
+<pad name="3" x="-1.27" y="0" drill="1" diameter="1.8542" rot="R180"/>
+<pad name="4" x="-3.81" y="0" drill="1" diameter="1.8542" rot="R180"/>
 <wire x1="1.27" y1="7.62" x2="1.27" y2="1.27" width="0.762" layer="21"/>
 <wire x1="3.81" y1="7.62" x2="3.81" y2="1.27" width="0.762" layer="21"/>
 </package>
@@ -2711,7 +2710,6 @@ USART&lt;p&gt;
 <part name="GND2" library="supply1" deviceset="GND" device=""/>
 <part name="GND3" library="supply1" deviceset="GND" device=""/>
 <part name="GND4" library="supply1" deviceset="GND" device=""/>
-<part name="JP1" library="1_domaci" deviceset="PINHD-4X1" device=""/>
 <part name="GND5" library="supply1" deviceset="GND" device=""/>
 <part name="GND6" library="supply1" deviceset="GND" device=""/>
 <part name="R2" library="1_domaci" deviceset="R" device="'2'" value="1k"/>
@@ -2761,6 +2759,7 @@ USART&lt;p&gt;
 <part name="GND17" library="supply1" deviceset="GND" device=""/>
 <part name="+3V11" library="supply1" deviceset="+3V3" device=""/>
 <part name="GND18" library="supply1" deviceset="GND" device=""/>
+<part name="JP3" library="1_domaci" deviceset="PINHD-4X1" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -2784,7 +2783,6 @@ USART&lt;p&gt;
 <instance part="GND2" gate="1" x="-25.4" y="43.18"/>
 <instance part="GND3" gate="1" x="-15.24" y="43.18"/>
 <instance part="GND4" gate="1" x="-27.94" y="88.9"/>
-<instance part="JP1" gate="A" x="-45.72" y="81.28" rot="R180"/>
 <instance part="GND5" gate="1" x="-35.56" y="71.12"/>
 <instance part="GND6" gate="1" x="-5.08" y="-50.8"/>
 <instance part="R2" gate="G$1" x="-27.94" y="-48.26" rot="R180"/>
@@ -2840,6 +2838,7 @@ USART&lt;p&gt;
 <instance part="GND17" gate="1" x="15.24" y="88.9"/>
 <instance part="+3V11" gate="G$1" x="5.08" y="10.16"/>
 <instance part="GND18" gate="1" x="5.08" y="-12.7"/>
+<instance part="JP3" gate="A" x="-45.72" y="78.74" rot="MR0"/>
 </instances>
 <busses>
 </busses>
@@ -2928,7 +2927,7 @@ USART&lt;p&gt;
 <segment>
 <wire x1="-43.18" y1="78.74" x2="-35.56" y2="78.74" width="0.1524" layer="91"/>
 <label x="-38.1" y="78.74" size="1.778" layer="95"/>
-<pinref part="JP1" gate="A" pin="2"/>
+<pinref part="JP3" gate="A" pin="3"/>
 </segment>
 </net>
 <net name="RX" class="0">
@@ -2940,7 +2939,7 @@ USART&lt;p&gt;
 <segment>
 <wire x1="-43.18" y1="81.28" x2="-35.56" y2="81.28" width="0.1524" layer="91"/>
 <label x="-38.1" y="81.28" size="1.778" layer="95"/>
-<pinref part="JP1" gate="A" pin="3"/>
+<pinref part="JP3" gate="A" pin="2"/>
 </segment>
 </net>
 <net name="+3V3" class="0">
@@ -3016,7 +3015,7 @@ USART&lt;p&gt;
 <segment>
 <pinref part="C4" gate="G$1" pin="P$2"/>
 <wire x1="-22.86" y1="83.82" x2="-43.18" y2="83.82" width="0.1524" layer="91"/>
-<pinref part="JP1" gate="A" pin="4"/>
+<pinref part="JP3" gate="A" pin="1"/>
 </segment>
 </net>
 <net name="GND" class="0">
@@ -3035,10 +3034,10 @@ USART&lt;p&gt;
 <wire x1="-20.32" y1="93.98" x2="-27.94" y2="93.98" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="JP1" gate="A" pin="1"/>
 <pinref part="GND5" gate="1" pin="GND"/>
 <wire x1="-43.18" y1="76.2" x2="-35.56" y2="76.2" width="0.1524" layer="91"/>
 <wire x1="-35.56" y1="76.2" x2="-35.56" y2="73.66" width="0.1524" layer="91"/>
+<pinref part="JP3" gate="A" pin="4"/>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="GND"/>
