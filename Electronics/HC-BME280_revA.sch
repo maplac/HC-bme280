@@ -2764,9 +2764,9 @@ USART&lt;p&gt;
 <sheets>
 <sheet>
 <plain>
-<text x="139.7" y="7.62" size="1.778" layer="97">1. pull up pred mosfetem je 47k
-2. RF modul nema pripojene napajeni</text>
-<text x="88.9" y="76.2" size="3.81" layer="97">HC-BME280 Rev.A</text>
+<text x="91.44" y="78.74" size="1.778" layer="97">1. Removed R2, R3 and T2. OLED connected directly to power line.
+2. RF module is not connected to power in PCB.</text>
+<text x="129.54" y="5.08" size="3.81" layer="97">HC-BME280 Rev.A</text>
 </plain>
 <instances>
 <instance part="Q1" gate="G$1" x="33.02" y="35.56" smashed="yes" rot="R180">
