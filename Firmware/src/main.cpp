@@ -156,6 +156,7 @@ void setup(void){
   analogReference(DEFAULT);//EXTERNAL
 
   isTimeout = true;
+  counterPackets = 0;
 }
 
 void loop(void){
@@ -285,6 +286,9 @@ void loop(void){
 
       bool isSendOk = radio.write( &packet, 32 );
       counterPackets++;
+      if(counterPackets == 0){
+        counterPackets = 1;
+      }
       counterSendAttempts++;
       if (!isSendOk){
         #ifdef DEBUG_ENABLED
