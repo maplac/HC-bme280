@@ -13,6 +13,7 @@
 #include <SSD1306Ascii.h>
 #include <SSD1306AsciiWire.h>
 
+#define DEVICE_ID       1
 #define DEBUG_ENABLED
 
 #define I2C_ADDRESS 0x3C
@@ -20,28 +21,29 @@
 SSD1306AsciiWire oled;
 BME280 bme280Sensor;
 RF24 radio(15, 16); // Set up nRF24L01 radio on SPI bus (CE, CS)
+const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 
+// mcu pins
 int pinAnalog = 0;
 int pinButton1 = 2;
 int pinButton2 = 3;
-int pinOledNotEnabled = 10;
 int pinLed = 9;
 
-uint8_t counterPackets = 0;
+// measured values
 float temperature = 0;
 float humidity = 0;
 float pressure = 0;
 float voltage = 0;
-bool isFirstRun = true;
-uint8_t buttonLastState = 3;
 
-uint32_t counterSendAttempts = 0;
-uint32_t counterSendFailed = 0;
-
-// Radio pipe addresses for the 2 nodes to communicate.
-const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+// flags
 volatile bool isTimeout = false;
 volatile bool isButton = false;
+
+uint8_t buttonLastState = 3;
+uint8_t counterPackets = 0;
+uint32_t counterSendAttempts = 0;
+uint32_t counterSendFailed = 0;
+char packet[32];
 
 ISR(WDT_vect) {
   Sleepy::watchdogEvent();
@@ -56,17 +58,15 @@ void setup(void){
 
   pinMode(pinButton1, INPUT);
   pinMode(pinButton2, INPUT);
-
+  pinMode(pinLed, OUTPUT);
+  digitalWrite(pinLed, LOW);
   attachInterrupt(digitalPinToInterrupt(pinButton1), buttonInt, CHANGE );
   attachInterrupt(digitalPinToInterrupt(pinButton2), buttonInt, CHANGE );
 
-  pinMode(pinOledNotEnabled, OUTPUT);
-  digitalWrite(pinOledNotEnabled, LOW);
-  pinMode(pinLed, OUTPUT);
-  digitalWrite(pinLed, LOW);
-
-  Serial.begin(57600);
-  printf_begin();
+  #ifdef DEBUG_ENABLED
+    Serial.begin(57600);
+    printf_begin();
+  #endif
 
   radio.begin();
   // optionally, increase the delay between retries & # of retries
@@ -76,11 +76,11 @@ void setup(void){
   // Open 'our' pipe for writing
   radio.openWritingPipe(pipes[0]);
   // Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
-  radio.openReadingPipe(1,pipes[1]);
+  //radio.openReadingPipe(1,pipes[1]);
   //radio.openWritingPipe(pipes[1]);
   //radio.openReadingPipe(1,pipes[0]);
   // radio.startListening();
-  radio.stopListening();
+  //radio.stopListening();
 
   #ifdef DEBUG_ENABLED
     radio.printDetails();
@@ -147,42 +147,37 @@ void setup(void){
     Serial.println(res, HEX);
   #endif
 
-
   Wire.begin();
-
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
   oled.setFont(System5x7);
   oled.set2X();
   oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
-  // delay(100);
-  // digitalWrite(pinOledNotEnabled, HIGH);
 
   analogReference(DEFAULT);//EXTERNAL
+
+  isTimeout = true;
 }
 
 void loop(void){
 
+    // make sure everything is finished before go to sleep
     delay(20);
-    if(isFirstRun){
-      isFirstRun = false;
-      isTimeout = true;
-    }else{
-      // Sleepy::powerDown();
-      if (!isButton && !isTimeout){
-        Sleepy::loseSomeTime(3000);
-      }
+
+    // got to sleep if nothing happend during last loop
+    if (!isButton && !isTimeout){
+      // wait for button press or measure timer
+      Sleepy::loseSomeTime(10000);
     }
 
     // button was pressed or released
     if(isButton){
       isButton = false;
-      Serial.println("Button interrupt");
-//*
+
       // debounce timeout
       delay(10);
       uint8_t buttonState = (digitalRead(pinButton1) << 1) | digitalRead(pinButton2);
 
-      // if a button actualy changed its state
+      // if the button actualy changed its state
       if (buttonLastState != 0 && buttonState != 0){
         switch(buttonLastState){
           case 1:{
@@ -190,15 +185,7 @@ void loop(void){
               case 1:break;
               case 2:break;
               case 3:{
-                // Wire.end();
-                // digitalWrite(pinLed, LOW);
                 oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
-                // digitalWrite(pinOledNotEnabled, HIGH);
-                // digitalWrite(18, LOW);
-                // digitalWrite(19, LOW);
-                // pinMode(18, INPUT);
-                // pinMode(19, INPUT);
-                // Wire.end();
                 break;
               }
             }
@@ -209,15 +196,7 @@ void loop(void){
               case 1:break;
               case 2:break;
               case 3:{
-                // Wire.end();
-                // digitalWrite(pinLed, LOW);
                 oled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
-                // digitalWrite(pinOledNotEnabled, HIGH);
-                // digitalWrite(18, LOW);
-                // digitalWrite(19, LOW);
-                // pinMode(18, INPUT);
-                // pinMode(19, INPUT);
-
                 break;
               }
             }
@@ -226,17 +205,6 @@ void loop(void){
           case 3:{
             switch(buttonState){
               case 1:{
-                // digitalWrite(pinLed, HIGH);
-                // pinMode(18, OUTPUT);
-                // pinMode(18, OUTPUT);
-                // digitalWrite(18, HIGH);
-                // digitalWrite(19, HIGH);
-                // digitalWrite(pinOledNotEnabled, LOW);
-                // delay(50);
-                // Wire.begin();
-
-                // SSD1306AsciiWire oled;
-                // oled.begin(&Adafruit128x64, I2C_ADDRESS);
                 oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
                 oled.clear();
                 oled.home();
@@ -248,17 +216,6 @@ void loop(void){
                 break;
               }
               case 2:{
-                // digitalWrite(pinLed, HIGH);
-                // pinMode(18, OUTPUT);
-                // pinMode(18, OUTPUT);
-                // digitalWrite(18, HIGH);
-                // digitalWrite(19, HIGH);
-                //
-                // digitalWrite(pinOledNotEnabled, LOW);
-                //
-                // delay(50);
-                // Wire.begin();
-                // SSD1306AsciiWire oled;
                 oled.ssd1306WriteCmd(SSD1306_DISPLAYON);
                 oled.clear();
                 oled.home();
@@ -274,25 +231,24 @@ void loop(void){
         }
       }
       buttonLastState = buttonState;
-//*/
     }
 
-
+    // measuring period timer
     if(isTimeout){
       isTimeout = false;
-      // Serial.println("Timeout interrupt");
+
+      // read battery voltage
+      voltage = analogRead(pinAnalog) * 3.3 / 1024.0;
+
       digitalWrite(pinLed, HIGH);
 
-      int val = analogRead(pinAnalog);
-      voltage = val * 3.3 / 1024.0;
-
       uint8_t dataToWrite = (bme280Sensor.settings.tempOverSample << 0x5) & 0xE0;
-      //Next, pressure oversampling
       dataToWrite |= (bme280Sensor.settings.pressOverSample << 0x02) & 0x1C;
-      //Last, set mode
+      //bme280Sensor.settings.runMode = 1;
       dataToWrite |= (bme280Sensor.settings.runMode) & 0x03;
       bme280Sensor.writeRegister(BME280_CTRL_MEAS_REG, dataToWrite);
       delay(10); // 1.25+2.3+2.3+0.575+2.3+0.575 = 9.3
+
       temperature = bme280Sensor.readTempC();
       pressure = bme280Sensor.readFloatPressure();
       humidity = bme280Sensor.readFloatHumidity();
@@ -309,69 +265,42 @@ void loop(void){
         Serial.println(" %");
       #endif
 
-      radio.stopListening();
-
-      char packet[32];
-      packet[0] = 1; // id
+      packet[0] = DEVICE_ID; // id
       packet[1] = counterPackets; // packet counter
       packet[2] = 0; // packet type
       packet[3] = 0; // reserved
 
-      float *packetF = (float*) &packet;
+      float *packetF = (float*) &packet; //size_of(float)=4
       packetF[1] = temperature;
       packetF[2] = pressure;
       packetF[3] = humidity;
+      packetF[4] = voltage;
 
-      printf("counter=%d, ", counterPackets);
-      bool ok = radio.write( &packet, 32 );
+      uint32_t *packetUI23 = (uint32_t*) &packet;
+      packetUI23[5] = counterSendFailed;
+
+      #ifdef DEBUG_ENABLED
+        printf("counter=%d", counterPackets);
+      #endif
+
+      bool isSendOk = radio.write( &packet, 32 );
       counterPackets++;
       counterSendAttempts++;
-      if (!ok){
-        printf("write failed, ");
+      if (!isSendOk){
+        #ifdef DEBUG_ENABLED
+          printf(" Transmission failed");
+        #endif
         counterSendFailed++;
       }
+
       radio.startListening();
-
-      // Wait here until we get a response, or timeout (250ms)
-      unsigned long started_waiting_at = millis();
-      bool timeout = false;
-      while ( ! radio.available() && ! timeout ){
-        if (millis() - started_waiting_at > 200 ){
-          timeout = true;
-        }
-      }
-      // Describe the results
-      if ( timeout ){
-        printf("response timed out");
-      }else{
-
-        // Spew it
-        printf("response: ");
-
-        // Dump the payloads until we've gotten everything
-        bool done = false;
-        char data[32];
-        while (!done)
-        {
-          // Fetch the payload, and see if this was the last one.
-          //done = radio.read( &got_time, sizeof(unsigned long) );
-          done = radio.read( &data, 32 );
-          uint8_t size = radio.getPayloadSize();
-          printf("size=%d, ", size);
-
-          // Spew it
-          //printf("Got payload %lu...",got_time);
-          data[31]=0;
-          printf("data[0]=%d", data[0]);
-          //printf("data[1:end]=%s", &data[1]);
-        }
-      }
+      radio.stopListening();
 
       digitalWrite(pinLed, LOW);
-      Serial.println("\n=========================================");
-
+      #ifdef DEBUG_ENABLED
+        Serial.println("\n=========================================");
+      #endif
     }
-
 }
 
 /*
@@ -421,3 +350,40 @@ bitSet(PCICR, PCIE2); //handler for interrupt
     oled.print(buttonState);
     oled.print("    ");
 */
+/*
+// Wait here until we get a response, or timeout (250ms)
+unsigned long started_waiting_at = millis();
+bool timeout = false;
+while ( ! radio.available() && ! timeout ){
+  if (millis() - started_waiting_at > 20 ){
+    timeout = true;
+  }
+}
+radio.stopListening();
+// Describe the results
+if ( timeout ){
+  printf("response timed out");
+}else{
+
+  // Spew it
+  printf("response: ");
+
+  // Dump the payloads until we've gotten everything
+  bool done = false;
+  char data[32];
+  while (!done)
+  {
+    // Fetch the payload, and see if this was the last one.
+    //done = radio.read( &got_time, sizeof(unsigned long) );
+    done = radio.read( &data, 32 );
+    uint8_t size = radio.getPayloadSize();
+    printf("size=%d, ", size);
+
+    // Spew it
+    //printf("Got payload %lu...",got_time);
+    data[31]=0;
+    printf("data[0]=%d", data[0]);
+    //printf("data[1:end]=%s", &data[1]);
+  }
+}
+//*/
