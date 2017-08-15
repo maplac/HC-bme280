@@ -79,8 +79,8 @@ void setup(void){
   //radio.openReadingPipe(1,pipes[1]);
   //radio.openWritingPipe(pipes[1]);
   //radio.openReadingPipe(1,pipes[0]);
-  // radio.startListening();
-  //radio.stopListening();
+  radio.startListening();
+  radio.stopListening();
 
   #ifdef DEBUG_ENABLED
     radio.printDetails();
