@@ -45,6 +45,9 @@ uint32_t counterSendAttempts = 0;
 uint32_t counterSendFailed = 0;
 char packet[32];
 
+void doMeasure(void);
+void doSend(void);
+
 ISR(WDT_vect) {
   Sleepy::watchdogEvent();
   isTimeout = true;
@@ -167,7 +170,7 @@ void loop(void){
     // got to sleep if nothing happend during last loop
     if (!isButton && !isTimeout){
       // wait for button press or measure timer
-      Sleepy::loseSomeTime(10000);
+      Sleepy::loseSomeTime(60000);
     }
 
     // button was pressed or released
@@ -221,6 +224,7 @@ void loop(void){
                 oled.clear();
                 oled.home();
                 oled.println(counterSendAttempts);
+                doSend();
                 oled.println(counterSendFailed);
                 delay(500);
                 break;
@@ -237,74 +241,81 @@ void loop(void){
     // measuring period timer
     if(isTimeout){
       isTimeout = false;
-
-      // read battery voltage
-      voltage = analogRead(pinAnalog) * 3.3 / 1024.0;
-
-      digitalWrite(pinLed, HIGH);
-
-      uint8_t dataToWrite = (bme280Sensor.settings.tempOverSample << 0x5) & 0xE0;
-      dataToWrite |= (bme280Sensor.settings.pressOverSample << 0x02) & 0x1C;
-      //bme280Sensor.settings.runMode = 1;
-      dataToWrite |= (bme280Sensor.settings.runMode) & 0x03;
-      bme280Sensor.writeRegister(BME280_CTRL_MEAS_REG, dataToWrite);
-      delay(10); // 1.25+2.3+2.3+0.575+2.3+0.575 = 9.3
-
-      temperature = bme280Sensor.readTempC();
-      pressure = bme280Sensor.readFloatPressure();
-      humidity = bme280Sensor.readFloatHumidity();
-
-      #ifdef DEBUG_ENABLED
-        Serial.print("Temperature: ");
-        Serial.print(temperature, 2);
-        Serial.println(" degrees C");
-        Serial.print("Pressure: ");
-        Serial.print(pressure, 2);
-        Serial.println(" Pa");
-        Serial.print("%RH: ");
-        Serial.print(humidity, 2);
-        Serial.println(" %");
-      #endif
-
-      packet[0] = DEVICE_ID; // id
-      packet[1] = counterPackets; // packet counter
-      packet[2] = 0; // packet type
-      packet[3] = 0; // reserved
-
-      float *packetF = (float*) &packet; //size_of(float)=4
-      packetF[1] = temperature;
-      packetF[2] = pressure;
-      packetF[3] = humidity;
-      packetF[4] = voltage;
-
-      uint32_t *packetUI23 = (uint32_t*) &packet;
-      packetUI23[5] = counterSendFailed;
-
-      #ifdef DEBUG_ENABLED
-        printf("counter=%d", counterPackets);
-      #endif
-
-      bool isSendOk = radio.write( &packet, 32 );
-      counterPackets++;
-      if(counterPackets == 0){
-        counterPackets = 1;
-      }
-      counterSendAttempts++;
-      if (!isSendOk){
-        #ifdef DEBUG_ENABLED
-          printf(" Transmission failed");
-        #endif
-        counterSendFailed++;
-      }
-
-      radio.startListening();
-      radio.stopListening();
-
-      digitalWrite(pinLed, LOW);
-      #ifdef DEBUG_ENABLED
-        Serial.println("\n=========================================");
-      #endif
+      doMeasure();
+      doSend();
     }
+
+}
+
+void doMeasure(void){
+  // read battery voltage
+  voltage = analogRead(pinAnalog) * 3.3 / 1024.0;
+
+  digitalWrite(pinLed, HIGH);
+
+  uint8_t dataToWrite = (bme280Sensor.settings.tempOverSample << 0x5) & 0xE0;
+  dataToWrite |= (bme280Sensor.settings.pressOverSample << 0x02) & 0x1C;
+  //bme280Sensor.settings.runMode = 1;
+  dataToWrite |= (bme280Sensor.settings.runMode) & 0x03;
+  bme280Sensor.writeRegister(BME280_CTRL_MEAS_REG, dataToWrite);
+  delay(10); // 1.25+2.3+2.3+0.575+2.3+0.575 = 9.3
+
+  temperature = bme280Sensor.readTempC();
+  pressure = bme280Sensor.readFloatPressure();
+  humidity = bme280Sensor.readFloatHumidity();
+
+  #ifdef DEBUG_ENABLED
+    Serial.print("Temperature: ");
+    Serial.print(temperature, 2);
+    Serial.println(" degrees C");
+    Serial.print("Pressure: ");
+    Serial.print(pressure, 2);
+    Serial.println(" Pa");
+    Serial.print("%RH: ");
+    Serial.print(humidity, 2);
+    Serial.println(" %");
+  #endif
+}
+
+void doSend(void){
+  packet[0] = DEVICE_ID; // id
+  packet[1] = counterPackets; // packet counter
+  packet[2] = 0; // packet type
+  packet[3] = 0; // reserved
+
+  float *packetF = (float*) &packet; //size_of(float)=4
+  packetF[1] = temperature;
+  packetF[2] = pressure;
+  packetF[3] = humidity;
+  packetF[4] = voltage;
+
+  uint32_t *packetUI23 = (uint32_t*) &packet;
+  packetUI23[5] = counterSendFailed;
+
+  #ifdef DEBUG_ENABLED
+    printf("counter=%d", counterPackets);
+  #endif
+
+  bool isSendOk = radio.write( &packet, 32 );
+  counterPackets++;
+  if(counterPackets == 0){
+    counterPackets = 1;
+  }
+  counterSendAttempts++;
+  if (!isSendOk){
+    #ifdef DEBUG_ENABLED
+      printf(" Transmission failed");
+    #endif
+    counterSendFailed++;
+  }
+
+  radio.startListening();
+  radio.stopListening();
+
+  digitalWrite(pinLed, LOW);
+  #ifdef DEBUG_ENABLED
+    Serial.println("\n=========================================");
+  #endif
 }
 
 /*
